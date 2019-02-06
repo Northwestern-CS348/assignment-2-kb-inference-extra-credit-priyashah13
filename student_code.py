@@ -142,6 +142,117 @@ class KnowledgeBase(object):
         """
         ####################################################
         # Student code goes here
+        # created a variable to keep track of the level of indentation
+        indent = 0
+        if isinstance(fact_or_rule, Fact):
+            # if fact_or_Rule is in fact a Fact,
+            # get the pointer to the actual fact in the KB
+            fact_or_rule = self._get_fact(fact_or_rule)
+            # check if this fact is in fact in the KB
+            if fact_or_rule in self.facts:
+                # for fact, we simply need to access the statement field and convert to string
+                fact_string = "fact: " + str(fact_or_rule.statement)
+                # then we check whether or not we need to add an ASSERTED tag
+                if fact_or_rule.asserted:
+                    fact_string += " ASSERTED"
+                # finally change lines
+                fact_string += "\n"
+                # now we check whether the fact has any fact-rule pairs in its supported by list
+                if len(fact_or_rule.supported_by) > 0:
+                    # for each fact-rule support, i will append the result of my helper function
+                    # to the ongoing string
+                    # i also pass the indent value to keep track
+                    for support in fact_or_rule.supported_by:
+                        fact_string += self.add_support(support, indent)
+                # print(fact_string)
+                # finally, return resulting string
+                return fact_string
+            else:
+                # if fact is not in the KB
+                e_string = "Fact is not in the KB"
+                return e_string
+        elif isinstance(fact_or_rule, Rule):
+            # if fact_or_rule is in fact a Rule,
+            # get the pointer to the actual rule in the KB
+            fact_or_rule = self._get_rule(fact_or_rule)
+            # check if this rule is in fact in the KB
+            if fact_or_rule in self.rules:
+                # for rule, it is slightly more complicated
+                # first we add first element of the lhs of the rule
+                rule_string = "rule: ("
+                rule_string += fact_or_rule.lhs[0]
+                # then for each subsequent item in the list of lhs items,
+                # we add a comma followed by the lhs element
+                for left in fact_or_rule.lhs[1:]:
+                    rule_string += ", " + str(left)
+                # finally, we add an arrow showing that it implies the rhs of the rule
+                rule_string += ") -> " + str(fact_or_rule.rhs)
+                # now we check whether or not we need to add the ASSERTED flag
+                if fact_or_rule.asserted:
+                    rule_string += " ASSERTED"
+                rule_string += "\n"
+                # create new line
+                if len(fact_or_rule.supported_by) > 0:
+                    # for each fact-rule support, i will append the result of my helper function
+                    # to the ongoing string
+                    # i also pass the indent value to keep track
+                    for support in fact_or_rule.supported_by:
+                        rule_string += self.add_support(support, indent)
+                # print(rule_string)
+                # finally return the resulting string
+                return rule_string
+            else:
+                # if rule is not in the KB
+                e_string = "Rule is not in the KB"
+                return e_string
+
+    def add_support(self, pair, ind):
+        # helper function to print the entire SUPPORTED BY area of the result string
+        # helper function will be passed a fact-rule pair and an indentation level
+        # helper function will be recursively called for all supports of supports to fact_or_rule
+        indent = ind + 1
+        # add a level of indentation each time recursively called
+        s_string = ""
+        for i in range(indent):
+            s_string += "  "
+        # add the number of indentations so far
+        s_string += "SUPPORTED BY" + "\n"
+        s_fact = pair[0]
+        # extract the fact from the fact-rule pair
+        s_rule = pair[1]
+        # extract the rule from the fact-rule pair
+        for i in range(indent):
+            s_string += "  "
+        # again, add the number of indents so far
+        s_string += "  fact: " + str(s_fact.statement)
+        # add one more level of indent for fact and add its statement
+        # check is asserted
+        if s_fact.asserted:
+            s_string += " ASSERTED"
+        s_string += "\n"
+        # if this fact is supported by something,
+        # recursively call helper function on each fact-rule pair in supported by list
+        # add 1 to indentation to make sure it is updated since we added in front of "fact: " above
+        if len(s_fact.supported_by) > 0:
+            for support in s_fact.supported_by:
+                s_string += self.add_support(support, indent+1)
+        # almost the same logic for rule
+        # only the lhs, rhs is different (similar to main function)
+        for i in range(indent):
+                s_string += "  "
+        s_string += "  rule: ("
+        s_string += str(s_rule.lhs[0])
+        for left in s_rule.lhs[1:]:
+            s_string += ", " + str(left)
+        s_string += ") -> " + str(s_rule.rhs)
+        if s_rule.asserted:
+            s_string += " ASSERTED"
+        s_string += "\n"
+        if len(s_rule.supported_by) > 0:
+            for support in s_rule.supported_by:
+                s_string += self.add_support(support, indent+1)
+        # return the resulting string in order to then append this to the main string from the main function
+        return s_string
 
 
 class InferenceEngine(object):
